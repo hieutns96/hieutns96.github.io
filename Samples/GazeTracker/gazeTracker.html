@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="https://visagetechnologies-com.loopiasecure.com/wp-content/themes/visage_1.3/style.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="css/stylevisage.css" type="text/css" media="all" />
+	<link rel="icon" href="https://visagetechnologies-com.loopiasecure.com/wp-content/themes/visage_1.3/images/visage.ico" />
+</head>
+<body style="background-color: white;" onload="canvasSetWindowed();">
+
+<div id="content">
+	<div id="gifs">
+		<div id="gifWrap1">
+			<img  src="icons/gea-allow.gif" class="gifs" id="geaAllow">
+			<img  src="icons/gea-light.gif" class="gifs" id="geaLight">
+			<img  src="icons/gea-comfor.gif" class="gifs" id="geaComfor">
+		</div>
+		<div id="gifWrap2">
+			<img  src="icons/gea-dark.gif" class="gifs" id="geaDark">
+			<img  src="icons/gea-calibration.gif" class="gifs" id="geaCalibration">
+		</div>
+		<div id="SCBwrap">
+			<button type="Button" class="mainButton" id="SCbutton" onclick="slideshowControl();"></button>
+		</div>
+	</div>
+	<canvas id="gazeCanvas" width="640"  height="480"></canvas>
+</div>
+
+<div id="container">
+	<div>
+		<canvas id="canvas" width="640" height="480" hidden = "true"></canvas>
+	</div>
+</div>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+
+<script src="../../lib/visageRendering.js"></script>
+
+<script type='text/javascript'>
+
+//VARS
+//**********
+var	canvas = document.getElementById('canvas');
+	gazeCanvas = document.getElementById('gazeCanvas');
+	button = document.getElementById('button');
+
+var mWidth = 0,
+	mHeight = 0;
+	
+var fps = 0,
+	now = 0, 
+	lastUpdate = 0,
+	fpsFilter = 50;
+
+var STATUS_WINDOWED =1,
+	STATUS_FULL_SCREEN = 2;    
+	
+var canvas_mode = STATUS_WINDOWED; 
+	
+var canCon = canvas.getContext('2d');	
+var gazeCanCon = gazeCanvas.getContext('2d');
+var startTracking = false;
+var draw = true;
+
+/*
+* Callback method mentioned in the documentation. 
+* Gets executed after all the preparation is done (all the files have been downloaded) and tracker is ready to start tracking.
+* In this case it enables buttons on the page.
+*/
+function callbackDownload(){
+	StartTracker();
+}
+
+var timeme = false;
+
+var trackerStates = ["TRACK_STAT_OFF","TRACK_STAT_OK","TRACK_STAT_RECOVERING","TRACK_STAT_INIT"];
+var trackerReturnState = trackerStates[0];
+
+var frameSample = [0,0,0,0,0];
+var newSample = [0,0,0,0,0];
+var ppixels,
+	pixels;
+
+var calibrations;
+var calibFrameCount;
+var inRecalibSequence = false;
+var timer;
+var startTimestamp = 0;
+var lastTimestamp = 0;
+var calibIndex;
+var calibCount;
+var recalibSequenceFinished = false;
+var drawgaze = false;
+var moduleInit = false;
+
+function recalibrate()
+{		
+	if(moduleInit)
+	{
+		if(trackerReturnState.get(0) == 1)
+		{
+			drawgaze = false;
+			timer = new Date();
+			inRecalibSequence = true;
+			startTimestamp = timer.getSeconds();
+			calibIndex = 0;
+			recalibSequenceFinished = false;
+		}
+	}
+}
+	
+/*
+* Compares two samples of 5 pixel values 
+*/
+function checkFrameDuplicate(newSample){
+	for (var i = 0; i <  newSample.length; i+=2){
+		if (newSample[i]!==frameSample[i])
+			return false;
+	}
+	//additional check
+	for (var i = 1; i < newSample.length; i+= 2)
+	{
+		if (newSample[i]!==frameSample[i])
+			return false;
+	}
+	return true;
+}
+
+var silhouette = new Image();
+silhouette.src = "icons/face-android.png";
+var logo = new Image();
+logo.src = "icons/logotype-tagline.png"
+
+var sampleState = 0;
+function slideshow()
+{
+	if(sampleState == 0)
+	{
+		SCbutton.innerHTML = 'NEXT >>';
+		gazeCanCon.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Welcome to Visage Gaze Tracker", gazeCanvas.width * 0.5, 0.1 * gazeCanvas.height);
+
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		var logoWidth = gazeCanvas.width*0.3;
+		var logoHeight = logo.height/logo.width*logoWidth;
+		gazeCanCon.drawImage(logo,Math.round(gazeCanvas.width/2 - logoWidth/2),Math.round(0.3 * gazeCanvas.height),logoWidth,logoHeight);
+		
+		
+		gazeCanCon.fillText("Gaze Tracker is a gaze analysis system. Gaze Tracker is used for monitoring", gazeCanvas.width * 0.5, 0.2 * gazeCanvas.height);
+		gazeCanCon.fillText("your eye movements and estimating the point you are looking at on your screen.", gazeCanvas.width * 0.5, 0.25 * gazeCanvas.height);
+		gazeCanCon.fillText('Please click "Next" to proceed.', gazeCanvas.width * 0.5, 0.7 * gazeCanvas.height);
+		gazeCanCon.font = "bold "+gazeCanvas.width/60+"px Arial";
+	}
+	
+	if(sampleState == 1)
+	{
+		gazeCanCon.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Please allow us access to your camera", gazeCanvas.width * 0.5, 0.2 * gazeCanvas.height);
+
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("Gaze Tracker requires access to your webcam in order to track your eye movement.", gazeCanvas.width * 0.5, 0.3 * gazeCanvas.height);
+		gazeCanCon.font = "bold "+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("Your images will not be recorded nor transmitted. ", gazeCanvas.width * 0.5, 0.4 * gazeCanvas.height);
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText('To ensure gaze estimation is accurate, please make sure your camera is located on the top center of your screen.', gazeCanvas.width * 0.5, 0.5 * gazeCanvas.height);
+	}
+	
+	if(sampleState == 2)
+	{
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Light", gazeCanvas.width * 0.5, 0.1 * gazeCanvas.height);
+
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("Please make sure that you have normal light in your room,", gazeCanvas.width * 0.5, 0.2 * gazeCanvas.height);
+		gazeCanCon.font = "bold "+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("gaze estimation will not be accurate if your room is dark.", gazeCanvas.width * 0.5, 0.3 * gazeCanvas.height);
+		gazeCanCon.fillText("Please make sure that there is no strong light behind your back.", gazeCanvas.width * 0.5, 0.6 * gazeCanvas.height);	
+	}
+	if(sampleState == 3)
+	{
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Position", gazeCanvas.width * 0.5, 0.3 * gazeCanvas.height);
+
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("It is important that you position yourself fairly close to the camera,", gazeCanvas.width * 0.5, 0.4 * gazeCanvas.height);
+		gazeCanCon.fillText("make yourself stable and comfortable in that position,", gazeCanvas.width * 0.5, 0.5 * gazeCanvas.height);
+		gazeCanCon.font = "bold "+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("and then do not move to ensure gaze estimation accuracy.", gazeCanvas.width * 0.5, 0.6 * gazeCanvas.height);	
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText('When you click "Next", the system will help you get in a good position.', gazeCanvas.width * 0.5, 0.7 * gazeCanvas.height);
+	}
+	if(sampleState == 4)
+	{
+		gazeCanCon.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Please sit fairly close to the camera so that your face fits roughly into the silhouette.", gazeCanvas.width * 0.5, 0.15 * gazeCanvas.height);
+		if(faceData.getFaceTranslation()[2] <= 0.7 && Math.abs(faceData.getFaceTranslation()[1]) <= 0.3 && Math.abs(faceData.getFaceTranslation()[0]) <= 0.1)
+		{
+			SCBwrap.style.display = "block"; 
+			document.getElementById("geaComfor").style.display = "block";
+			document.getElementById("geaCalibration").style.display = "block";
+			gazeCanCon.fillText("This is a good position. Make yourself stable and comfortable", gazeCanvas.width * 0.5, 0.6 * gazeCanvas.height);
+		}
+		else
+		{
+			SCBwrap.style.display = "none"; 
+			document.getElementById("geaComfor").style.display = "none";
+			document.getElementById("geaCalibration").style.display = "none";
+			gazeCanCon.translate(gazeCanvas.width, 0);
+			gazeCanCon.scale(-1, 1);
+			gazeCanCon.drawImage(video,Math.round(gazeCanvas.width/2 - mWidth/2),Math.round(0.2 * gazeCanvas.height),mWidth,mHeight);
+			gazeCanCon.translate(gazeCanvas.width, 0);
+			gazeCanCon.scale(-1, 1);
+			var ratio = silhouette.width / silhouette.height;
+			var sHeight = mHeight * 0.6;
+			var sWidth = sHeight * ratio;
+			gazeCanCon.drawImage(silhouette,Math.round(gazeCanvas.width/2 -  sWidth/2),Math.round(0.2 * gazeCanvas.height + mHeight*0.25),sWidth,sHeight);
+		}
+	}
+	if(sampleState == 5)
+	{
+		gazeCanCon.fillStyle = "black";
+		gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+		gazeCanCon.textAlign = "center";
+		gazeCanCon.fillText("Calibration", gazeCanvas.width * 0.5, 0.2 * gazeCanvas.height);
+
+		gazeCanCon.font = ""+gazeCanvas.width/60+"px Arial";
+		gazeCanCon.fillText("Click on the red dots. Remember, only your eyes move, not your head.", gazeCanvas.width * 0.5, 0.3 * gazeCanvas.height);
+		gazeCanCon.fillText("Press 'SPACE' if you wish to reset the calibration.", gazeCanvas.width * 0.5, 0.4 * gazeCanvas.height);
+	}
+}
+
+
+//Slideshow controls
+//**************************************************************************
+function slideshowControl()
+{
+	if(sampleState == 0)
+	{
+		sampleState = 1;
+		canvasSetFullScreen();
+		SCBwrap.style.display = "none";
+		document.getElementById("geaAllow").style.display = "block"
+		startCamera();
+		slideshow();
+	}
+	
+	else if(sampleState == 2)
+	{
+		sampleState = 3;
+		document.getElementById("geaDark").style.display = "none";
+		document.getElementById("geaLight").style.display = "none";
+		slideshow();
+	}
+	else if(sampleState == 3)
+	{
+		sampleState = 4;
+		SCbutton.innerHTML = "I AM COMFORTABLE. I WILL NOT MOVE.";
+		slideshow();
+	}
+	else if(sampleState == 4 && faceData.getFaceTranslation()[2] <= 0.7 && Math.abs(faceData.getFaceTranslation()[1]) <= 0.3 && Math.abs(faceData.getFaceTranslation()[0]) <= 0.1)
+	{
+		sampleState = 5;
+		SCBwrap.style.display = "none";
+		document.getElementById("geaComfor").style.display = "none";
+		document.getElementById("geaCalibration").style.display = "none";
+		recalibrate();
+	}
+}
+
+
+var fps = 30;
+var now;
+var then = Date.now();
+var interval = 1000/fps;
+var delta;
+
+/*
+*Method that is called on every frame via requestAnimationFrame mechanism.
+*Draws camera image on the canvas, takes the pixel data, sends them to the tracker and finally, depending on the result, draws the results.
+*/
+function processFrame()
+{
+	window.requestAnimationFrame(processFrame);
+	
+	now = Date.now();
+	delta = now - then;
+	
+	//Limit frame rate according to the fps variable
+	if (delta > interval)
+	{
+		then = now - (delta % interval);
+		
+		canvas.width = mWidth;
+		//Draws an image from cam on the canvas
+		canCon.drawImage(video,0,0,mWidth,mHeight);
+		
+		//Access pixel data	
+		imageData = canCon.getImageData(0,0, mWidth, mHeight).data;
+		
+		gazeCanCon.clearRect(0, 0, gazeCanvas.width, gazeCanvas.height);
+		
+		//Save pixel data to preallocated buffer
+		for(i=0; i<imageData.length; i+=4)
+		{
+			average = 0.299*imageData[i] + 0.587*imageData[i+1] + 0.114*imageData[i+2];
+			pixels[i] = imageData[i];
+		}
+
+		//Call Update() if ready to start tracking and frame is new
+		if (startTracking)
+		{
+			trackerReturnState = m_Tracker.track(
+					mWidth, mHeight,ppixels, faceDataArray,
+					Module.VisageTrackerImageFormat.VISAGE_FRAMEGRABBER_FMT_RGBA.value,
+					Module.VisageTrackerOrigin.VISAGE_FRAMEGRABBER_ORIGIN_TL.value, 
+					0,
+					-1,
+					maxFaces
+				);
+			if(trackerReturnState.get(0)===Module.VisageTrackerStatus.TRACK_STAT_OK.value)
+			{	
+				document.getElementById("gifs").style.display = "block";
+				if(sampleState == 1)
+				{							
+					sampleState = 2;
+					document.getElementById("geaAllow").style.display = "none";
+					document.getElementById("geaDark").style.display = "block";
+					document.getElementById("geaLight").style.display = "block";
+					SCBwrap.style.display = "block";
+				}
+				slideshow();
+			}
+			else
+			{
+				document.getElementById("gifs").style.display = "none";
+				gazeCanCon.fillStyle = "black";
+				gazeCanCon.font = "bold "+gazeCanvas.width/40+"px Arial";
+				gazeCanCon.textAlign = "center";
+				gazeCanCon.fillText("Please wait for tracker to initialize to start calibration", gazeCanvas.width * 0.5, 0.4 * gazeCanvas.height);
+				if(canvas_mode == STATUS_FULL_SCREEN)
+				{
+					gazeCanCon.fillText("Press (ESC) to exit", gazeCanvas.width * 0.5, 0.6 * gazeCanvas.height);
+				}
+			}
+			
+			if(recalibSequenceFinished && sampleState==5){
+				drawScreenSpaceGaze(calibrations[3 * calibIndex + 1], calibrations[3 * calibIndex + 2], 1);
+			}
+			
+		}
+		
+		if(!inRecalibSequence && drawgaze && faceDataArray.get(0).gazeData.inState == 2 && sampleState==5)
+		{
+			drawScreenSpaceGaze(Math.min(Math.max(faceDataArray.get(0).gazeData.x, 0), 1), Math.min(Math.max(faceDataArray.get(0).gazeData.y, 0), 1), faceDataArray.get(0).gazeData.inState);
+		}
+		
+		if(inRecalibSequence)
+		{	
+			curTimer = new Date();
+			lastTimestamp = curTimer.getSeconds();
+			inRecalibSequence = false;
+			recalibSequenceFinished = true;
+			m_Tracker.initOnlineGazeCalibration();
+		}
+		
+		//Calculate FPS
+		var thisFrameFPS = 1000 / ((now=new Date) - lastUpdate);
+		fps += (thisFrameFPS - fps) / fpsFilter;
+		lastUpdate = now;
+	}		
+}
+//Function called when tracking is resumed/started
+function StartTracker(){
+	
+	startTracking = true;
+}
+
+function StopTracker(){
+	startTracking = false;
+}
+
+/**
+* Mouse position handler
+*/
+function getPosition(event)
+{
+	var xcan = new Number();
+	var ycan = new Number();
+	var xcanrel = new Number();
+	var ycanrel = new Number();
+	if (event.x != undefined && event.y != undefined)
+		{
+		  xcan = event.x;
+		  ycan = event.y;
+		}
+		else // Firefox method to get the position
+		{
+		  xcan = event.clientX + document.body.scrollLeft +
+			  document.documentElement.scrollLeft;
+		  ycan = event.clientY + document.body.scrollTop +
+			  document.documentElement.scrollTop;
+		}
+	xcan -= gazeCanvas.offsetLeft;
+	ycan -= gazeCanvas.offsetTop;
+	xcanrel = xcan / gazeCanvas.width;
+	ycanrel = ycan / gazeCanvas.height;
+	calibrate(xcanrel,ycanrel);
+}
+
+gazeCanvas.addEventListener("mousedown", getPosition, false);
+
+var clickdif = 0.02; //Calibration point click allowed offset, percentage of canvas size
+
+/**
+* Calibrate initial calibration points and generate additional random calibration points.
+*/
+function calibrate(xrel,yrel)
+{
+	if(!startTracking || trackerReturnState.get(0)!==Module.VisageTrackerStatus.TRACK_STAT_OK.value)
+	{
+		return;
+	}
+	if( xrel<(calibrations[3 * calibIndex + 1]+clickdif) && 
+		xrel>(calibrations[3 * calibIndex + 1]-clickdif) && 
+		yrel<(calibrations[3 * calibIndex + 2]+clickdif) && 
+		yrel>(calibrations[3 * calibIndex + 2]-clickdif)
+	)
+	{
+		if (startTracking===true)
+		{
+			if(recalibSequenceFinished)
+			{
+				m_Tracker.addGazeCalibrationPoint(calibrations[3 * calibIndex + 1], calibrations[3 * calibIndex + 2]);
+				calibIndex++;
+			}
+			
+			if(calibIndex >= calibCount)
+			{
+				drawgaze = true;
+				var pomx = Math.random()*0.85 + 0.1;
+				var pomy = Math.random()*0.85 + 0.1;
+				calibrations.push(calibIndex);
+				calibrations.push(pomx);
+				calibrations.push(pomy);
+				m_Tracker.finalizeOnlineGazeCalibration();
+			}
+		}	
+	}
+}
+
+//Canvas FULL_SCREEN/WINDOW controls
+//**************************************************************************
+/**
+* Set canvas to WINDOWED mode
+*/
+function canvasSetWindowed()
+{
+	canvas_mode = STATUS_WINDOWED;
+	gazeCanvas.width = document.documentElement.clientWidth;
+	gazeCanvas.height = document.documentElement.clientHeight; 
+	sampleState = 0;
+	document.getElementById("geaAllow").style.display = "none";
+	document.getElementById("geaDark").style.display = "none";
+	document.getElementById("geaLight").style.display = "none";
+	document.getElementById("geaComfor").style.display = "none";
+	document.getElementById("geaCalibration").style.display = "none";
+	SCBwrap.style.display = "block";
+	recalibrate();
+	slideshow();
+}
+
+/**
+* Set canvas to FULL_SCREEN mode
+*/
+function canvasSetFullScreen()
+{
+	var elem = document.getElementById("content");
+	if (elem.requestFullscreen){
+	  elem.requestFullscreen();
+	} else if (elem.msRequestFullscreen) {
+	  elem.msRequestFullscreen();
+	} else if (elem.mozRequestFullScreen) {
+	  elem.mozRequestFullScreen();
+	} else if (elem.webkitRequestFullscreen) {
+	  elem.webkitRequestFullscreen();
+	}	
+	gazeCanvas.width = screen.width;
+	gazeCanvas.height = screen.height; 
+}
+
+/**
+* Exit canvas FULL_SCREEN mode
+*/
+function canvasExitFullScreen() 
+{
+  if(document.exitFullscreen) {
+	document.exitFullscreen();
+  } else if(document.mozCancelFullScreen) {
+	document.mozCancelFullScreen();
+  } else if(document.webkitExitFullscreen) {
+	document.webkitExitFullscreen();
+  }
+}
+
+/**
+* Toggle canvas FULL_SCREEN mode ON/OFF
+*/
+function toggleFullScreen()
+{
+	if(canvas_mode == STATUS_FULL_SCREEN)
+	{
+		canvasExitFullScreen();
+	}
+	else
+	{
+		canvasSetFullScreen();
+	}
+}
+
+function fsonoff()
+{
+	if(canvas_mode != STATUS_FULL_SCREEN)
+	{
+		canvas_mode = STATUS_FULL_SCREEN;
+	}
+	else
+	{
+		gazeCanvas.width = document.documentElement.clientWidth;
+		gazeCanvas.height = document.documentElement.clientHeight;
+		canvas_mode = STATUS_WINDOWED;
+		sampleState = 0;
+		document.getElementById("geaAllow").style.display = "none";
+		document.getElementById("geaDark").style.display = "none";
+		document.getElementById("geaLight").style.display = "none";
+		document.getElementById("geaComfor").style.display = "none";
+		document.getElementById("geaCalibration").style.display = "none";
+		SCBwrap.style.display = "block";
+		slideshow();
+	}
+	recalibrate();
+}
+
+document.addEventListener('webkitfullscreenchange', function(e) {
+	fsonoff();
+}, false);
+document.addEventListener('mozfullscreenchange', function(e) {
+	fsonoff();
+}, false);
+document.addEventListener('fullscreenchange', function(e) {
+	fsonoff();
+}, false);
+
+
+window.onkeypress = function(e) 
+{
+	var key = e.keyCode ? e.keyCode : e.which;
+	if (key == 32) //SPACE (Start recalibrate())
+	{   
+		canvasSetFullScreen();
+		recalibrate();
+	}
+}
+
+//
+var m_Tracker;
+var imageData;
+
+var video = document.createElement('video');
+//Mobile safari requirement
+//https://webkit.org/blog/6784/new-video-policies-for-ios/
+video.setAttribute("playsinline", true);
+
+//Handlers for camera communication
+//callback methods for getUserMedia : deniedStream, errorStream, startStream
+//**************************************************************************
+
+//Alerts the user when there is no camera
+function deniedStream(){
+	alert("Camera access denied!");
+}
+//Pushes error to the console when there is error with camera access
+function errorStream(e){
+	if (e){
+		console.error(e);
+	}
+}
+
+function onModuleInitialized()
+{	
+	if (mWidth === 0)
+	{
+		setTimeout(onModuleInitialized, 100);
+		return
+	}
+	
+	moduleInit = true;
+	sampleState = 2;
+	document.getElementById("geaAllow").style.display = "none";
+	document.getElementById("geaDark").style.display = "block";
+	document.getElementById("geaLight").style.display = "block";
+	SCBwrap.style.display = "block";
+	
+	ppixels = Module._malloc(mWidth*mHeight*4);
+	pixels = new Uint8Array(Module.HEAPU8.buffer, ppixels, mWidth*mHeight*4);
+					
+	Module.initializeLicenseManager("431-178-039-010-389-293-858-207-135-758-802.vlc");
+	//set up tracker and licensing, valid license needs to be provided
+	m_Tracker = new Module.VisageGazeTracker("../../lib/Facial Features Tracker - High.cfg");
+	
+	faceDataArray = new Module.FaceDataVector();
+	faceData = new Module.FaceData();
+    faceDataArray.push_back(faceData);
+	
+	maxFaces = 1;
+	
+	trackerReturnState = new Module.VectorFloat();
+	trackerReturnState = trackerStates[0];
+	
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', 'calibration.txt', false);
+	xhr.setRequestHeader('Content-type','application/x-www-form-urlencoded');
+	xhr.send();
+	if (xhr.status === 200) 
+	{
+		var response = xhr.responseText;
+	} 
+	
+	var lines = response.split('\n');
+	calibrations = [];
+	var count = 0;
+	for(i = 0; i < lines.length; i++)
+	{
+		var line = lines[i].split(' ');
+		if(line.length == 3)
+		{
+			calibrations[3 * i + 0] = parseFloat(line[0]);
+			calibrations[3 * i + 1] = parseFloat(line[1]);
+			calibrations[3 * i + 2] = parseFloat(line[2]);	
+			count++;
+		}
+	}
+	
+	calibCount = lines.length;
+	calibIndex = 0;
+
+	//Use request animation frame mechanism
+	processFrame();
+}
+
+//Is triggered when cam stream is successfully fetched
+//NOTE: Can be buggy, try to increase the value from 1000ms to some higher value in that case
+function startStream(stream){
+	video.addEventListener('canplay', function DoStuff() {
+		video.removeEventListener('canplay', DoStuff, true);
+		setTimeout(function() {
+			video.play();
+	
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			
+			mWidth = video.videoWidth;
+			mHeight = video.videoHeight;
+
+		}, 1000);
+	}, true);
+		
+	
+	video.srcObject = stream;
+	video.play();
+}
+						  
+(function() {
+	var i = 0,
+		lastTime = 0,
+		vendors = ['ms', 'moz', 'webkit', 'o'];
+	
+	while (i < vendors.length && !window.requestAnimationFrame) {
+		window.requestAnimationFrame = window[vendors[i] + 'RequestAnimationFrame'];
+		window.cancelAnimationFrame =
+		  window[vendors[i]+'CancelAnimationFrame'] || window[vendors[i]+'CancelRequestAnimationFrame'];
+		i++;
+	}
+	if (!window.requestAnimationFrame) {
+		alert("RequestAnimationFrame mechanism is not supported by this browser.");
+	}
+}());
+
+//Here is where the stream is fetched
+try {
+	navigator.mediaDevices.getUserMedia({
+		video: true,
+		audio: false
+	}).then(startStream).catch(deniedStream);
+	} catch (e) {
+		try {
+			navigator.mediaDevices.getUserMedia('video', startStream, deniedStream);
+		} catch (e) {
+			errorStream(e);
+		}
+	}
+video.loop = video.muted = true;
+video.autoplay = true;
+video.load();
+
+
+</script>
+
+<script src="../../lib/visageSDK.js"></script>
+
+<script>
+var Module = VisageModule({onRuntimeInitialized: onModuleInitialized});
+</script>
+
+</body>
+</html> 
