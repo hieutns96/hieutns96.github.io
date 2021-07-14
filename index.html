@@ -1,279 +1,282 @@
-	<!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-	<meta charset="utf-8">
-	<link rel="stylesheet" href="https://visagetechnologies-com.loopiasecure.com/wp-content/themes/visage_1.3/style.css" type="text/css" media="all" />
-	<link rel="icon" href="https://visagetechnologies-com.loopiasecure.com/wp-content/themes/visage_1.3/images/visage.ico" />	
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>Hieu Tran Portfolio</title>
+  <meta content="" name="descriptison">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <link href="assets/vendor/ionicons/css/ionicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/owl.carousel/assets/owl.carousel.min.css" rel="stylesheet">
+  <link href="assets/vendor/animate.css/animate.min.css" rel="stylesheet">
+  <link href="assets/vendor/venobox/venobox.css" rel="stylesheet">
+
+  <!-- Google / Search Engine Tags -->
+  <meta itemprop="name" content="Hieu Tran Portfolio">
+  <meta itemprop="description" content="This is my Portfolio. Nice eh?">
+  <meta itemprop="image" content="assets/img/profile.jpg">
+
+  <link href="assets/css/style.css" rel="stylesheet">
+
+
 </head>
-<body>
-<header>
-	<h1 id="logo" style="float:left;">
-	<a href="http://www.visagetechnologies.com">Visage Technologies<br/><span>Face Tracking & Analysis</span></a>
-	</h1>
-	<h1 style="height:80px;line-height:80px;">
-	Face Detector for HTML5 DEMO
-	</h1>
-</header>
-<div  id="status" style = "margin-left: 100px; margin-top:10px">Downloading...</div>
-	<div style = "margin-left: 100px; margin-top:10px">
-		<progress value="0" max="100" id="progress" hidden=1 ></progress>  
-	</div>
-</div>
-<div id="container" style="overflow: hidden;margin-left: 100px;">
-	<canvas id="canvas" width="640" height="480" style="float:left;border:1px solid black;-webkit-transform: scaleX(-1);-moz-transform: scaleX(-1);"></canvas>
-	<div id="resume" style="margin-left:50px;float:left;"><a onclick="toggleSlider();"><i><b>Results (Click here):</b></i></a>
-	<div id="panelThatSlides" style="position: relative; left: 0px; background-color: rgb(238, 238, 238); width: 300px; display: none; background-position: initial initial; background-repeat: initial initial;">
-		<div id="contentThatFades" style="position: relative; left: 0px; background-color: rgb(238, 238, 238); width: 300px; display: block; background-position: initial initial; background-repeat: initial initial;">
-			<div id="data">
-			<p>FPS CALCULATED: <b id="boldStuff">29.3fps</b> </p> 
-			</div>
-		</div>
-	</div>
-</div>
-</div>
-<div id="toolbox" style = "margin-left: 100px; margin-right:auto; margin-top:10px">
-</div>
 
-<script src="../../lib/bezier-spline.js"></script>
+<body id="page-top">
 
-<script src="../../lib/visageRendering.js"></script>
+  <!-- ======= Header/ Navbar ======= -->
+  <nav class="navbar navbar-b navbar-trans navbar-expand-md fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand js-scroll" href="#page-top">Hieu Tran Portfolio</a>
+      <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarDefault" aria-controls="navbarDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <div class="navbar-collapse collapse justify-content-end" id="navbarDefault">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link js-scroll active" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link js-scroll" href="#about">About</a>
+          </li>          
+        
+          <li class="nav-item">
+            <a class="nav-link js-scroll" href="#contact">Contact</a>
+          </li>
+		  
+		  <li class="nav-item">
+            <a class="nav-link js-scroll" href="face_reg.html">face Recognition</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+  <!-- ======= Intro Section ======= -->
+  <div id="home" class="intro route bg-image" style="background-image: url(assets/img/img_cover.jpg)">
+    <div class="overlay-itro"></div>
+    <div class="intro-content display-table">
+      <div class="table-cell">
+        <div class="container">
 
-<script type='text/javascript'>
+          <h1 class="intro-title mb-4">I am Hieu Tran</h1>
+          <p class="intro-subtitle"><span class="text-slider-items">Fullstack Developer</span><strong class="text-slider"></strong></p>
 
-function toggleSlider() {
-if ($("#panelThatSlides").is(":visible")) {
-	$("#contentThatFades").fadeOut(600, function(){
-		$("#panelThatSlides").slideUp();
-	});
-}
-if ($("#panelThatSlides2").is(":visible")) {
-	$("#contentThatFades2").fadeOut(600, function(){
-		$("#panelThatSlides2").slideUp();
-	});
-}
-else {
-	$("#panelThatSlides").slideDown(600, function(){
-		$("#contentThatFades").fadeIn();
-	});
-}   
-}
+        </div>
+      </div>
+    </div>
+  </div><!-- End Intro Section -->
 
-//VARS
-//**********
-var fpsOut = document.getElementById('boldStuff');
-var fpsTracker = document.getElementById('fpsTracker');
-var transOutput = document.getElementById('myTrans'),
-	rotOutput = document.getElementById('myRot'),
-	statOutput = document.getElementById('myStat'),
-	canvas = document.getElementById('canvas');
+  <main id="main">
 
-var mWidth = 0,
-	mHeight = 0;
-	
-var fps = 0,
-	now = 0, 
-	lastUpdate = 0
-	fpsFilter = 50;
-
-var minFaceScale = 0;
-	
-var canCon = canvas.getContext('2d');	
-var startDetecting = false;
-var draw = true;
-
-//FPS - Refreshes FPS display every 1000ms
-setInterval(function(){
-  fpsOut.innerHTML = fps.toFixed(1) + "fps";
-}, 10);
-
-/*
-* Callback method mentioned in the documentation. 
-* Gets executed after all the preparation is done (all the files have been downloaded) and tracker is ready to start tracking.
-* In this case it enables buttons on the page.
-*/
-function callbackDownload()
-{
-	StartDetector();
-}
-
-var frameSample = [0,0,0,0,0];
-var newSample = [0,0,0,0,0];
-var ppixels,
-	pixels;
-var maxFaces = 10;
-
-/*
-*Method that is called on every frame via requestAnimationFrame mechanism.
-*Draws camera image on the canvas, takes the pixel data, sends them to the tracker and finally, depending on the result, draws the results.
-*Rudimentary timing is implemented to be activated on button click and it also checks for duplicate frames.
-*/
-function processFrame(){
-	window.requestAnimationFrame(processFrame);
-
-	canvas.width = mWidth;
-	//Draws an image from cam on the canvas
-	canCon.drawImage(video,0,0,mWidth,mHeight);
-	
-	//Access pixel data
-	imageData = canCon.getImageData(0,0, mWidth, mHeight).data;
-	
-	//Save pixel data to preallocated buffer
-	for(i=0; i<imageData.length; i+=1)
-	{
-		pixels[i] = imageData[i];
-	}
-	
-	//Alternative way to save pixel data, seems faster but not consistent
-	//pixels.set(imageData);
-	
-	//Call Update() if ready to start tracking and frame is new
-	if (startDetecting===true)
-	{
-		var numOfFaces = m_Detector.detectFeatures(mWidth,mHeight,ppixels,faceData,10);
-	}
-	
-	//Draw based upon data if tracker status is OK
-	if (startDetecting===true && numOfFaces > 0)
-	{
-		for (var i = 0; i < numOfFaces; i++)
-		{
-			var faceDataInstance = faceData.get(i);
-			drawFaceFeatures(faceDataInstance,i);
-			drawFaceModelAxes(faceDataInstance);
-			drawGaze(faceDataInstance);
-		}
-	}
-	
-	//Calculate FPS
-	var thisFrameFPS = 1000 / ((now=new Date) - lastUpdate);
-	fps += (thisFrameFPS - fps) / fpsFilter;
-	lastUpdate = now;
-}
-//Function called when Start is clicked, tracking is resumed/started
-function StartDetector(){
-	
-	startDetecting = true;
-}
-
-function StopDetector(){
-	startDetecting = false;
-}
-
-var m_Detector;
-var faceData;
-var imageData;
-
-var video = document.createElement('video');
-//Mobile safari requirement
-//https://webkit.org/blog/6784/new-video-policies-for-ios/
-video.setAttribute("playsinline", true);
-
-//Handlers for camera communication
-//callback methods for getUserMedia : deniedStream, errorStream, startStream
-//**************************************************************************
-
-//Alerts the user when there is no camera
-function deniedStream(){
-	alert("Camera access denied!");
-}
-//Pushes error to the console when there is error with camera access
-function errorStream(e){
-	if (e){
-		console.error(e);
-	}
-}
-
-function onModuleInitialized()
-{	
-	if (mWidth === 0)
-	{
-		setTimeout(onModuleInitialized, 100);
-		return
-	}
-	//Allocate memory for image data
-	ppixels = Module._malloc(mWidth*mHeight*4);
-	//Create a view to the memory
-	pixels = new Uint8ClampedArray(Module.HEAPU8.buffer, ppixels, mWidth*mHeight*4);
-	
-	//set up detector and licensing, valid license needs to be provided
-	Module.initializeLicenseManager("431-178-039-010-389-293-858-207-135-758-802.vlc");
-	m_Detector = new Module.VisageDetector();
-	faceData = new Module.FaceDataVector();
-	for (var i = 0; i < 10; i++)
-	{
-		faceData.push_back(new Module.FaceData());
-	}
-
-	//Use request animation frame mechanism - slower but with smoother animation
-	processFrame();
-}
-
-//Is triggered when cam stream is successfully fetched
-//NOTE: Can be buggy, try to increase the value from 1000ms to some higher value in that case
-function startStream(stream){
-	video.addEventListener('canplay', function DoStuff() {
-		video.removeEventListener('canplay', DoStuff, true);
-		setTimeout(function() {
-			video.play();
-	
-			canvas.width = video.videoWidth;
-			canvas.height = video.videoHeight;
-			
-			mWidth = video.videoWidth;
-			mHeight = video.videoHeight;
-
-		}, 1000);
-	}, true);
-		
-	
-	video.srcObject = stream;
-	video.play();
-}
+    <!-- ======= About Section ======= -->
+    <section id="about" class="about-mf sect-pt4 route">
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="box-shadow-full">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="row">
+                    <div class="col-sm-6 col-md-5">
+                      <div class="about-img">
+                        <img src="assets/img/profile.jpg" class="img-fluid rounded b-shadow-a" alt="">
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-7">
+                      <div class="about-info">
+                        <p><span class="title-s">Name: </span> <span>Hieu Tran</span></p>
+                        <p><span class="title-s">Profile: </span> <span>Full Stack Developer</span></p>
+                        <p><span class="title-s">Email: </span> <span>hieutns96@gmail.com</span></p>
+                        <p><span class="title-s">Phone: </span> <span>(+84) 93-863-0043</span></p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="skill-mf">
+                    <p class="title-s">Skill</p>
+                    <span>C#</span> <span class="pull-right">90%</span>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span>HTML5</span> <span class="pull-right">75%</span>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span>CSS3</span> <span class="pull-right">75%</span>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span>PHP</span> <span class="pull-right">60%</span>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 60%" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span>JAVASCRIPT</span> <span class="pull-right">70%</span>
+                    <div class="progress">
+                      <div class="progress-bar" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="about-me pt-4 pt-md-0">
+                    <div class="title-box-2">
+                      <h5 class="title-left">
+                        About me
+                      </h5>
+                    </div>
+                    <p class="lead">
+                      Blends academic knowledge with practical experience in both web development and algorithm usage and application.
+                      Worked in a range of areas that cover open source, research and consulting,
+                      all while keeping updated with the most recent technologies and always seeking to improve and grow as a professional and as a person.
+                    </p>                   
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End About Section -->
 
 
-(function() {
-	var i = 0,
-		lastTime = 0,
-		vendors = ['ms', 'moz', 'webkit', 'o'];
-	
-	while (i < vendors.length && !window.requestAnimationFrame) {
-		window.requestAnimationFrame = window[vendors[i] + 'RequestAnimationFrame'];
-		window.cancelAnimationFrame =
-		  window[vendors[i]+'CancelAnimationFrame'] || window[vendors[i]+'CancelRequestAnimationFrame'];
-		i++;
-	}
-	if (!window.requestAnimationFrame) {
-		alert("RequestAnimationFrame mechanism is not supported by this browser.");
-	}
-}());
+    <!-- ======= Counter Section ======= -->
+    <div class="section-counter paralax-mf bg-image" style="background-image: url(assets/img/counters-bg.jpg)">
+      <div class="overlay-mf"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-3 col-lg-3">
+            <div class="counter-box counter-box pt-4 pt-md-0">
+              <div class="counter-ico">
+                <span class="ico-circle"><em class="ion-checkmark-round"></em></span>
+              </div>
+              <div class="counter-num">
+                <p class="counter">450</p>
+                <span class="counter-text">WORKS COMPLETED</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3 col-lg-3">
+            <div class="counter-box pt-4 pt-md-0">
+              <div class="counter-ico">
+                <span class="ico-circle"><i class="ion-ios-calendar-outline"></i></span>
+              </div>
+              <div class="counter-num">
+                <p class="counter">5</p>
+                <span class="counter-text">YEARS OF EXPERIENCE</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3 col-lg-3">
+            <div class="counter-box pt-4 pt-md-0">
+              <div class="counter-ico">
+                <span class="ico-circle"><i class="ion-ios-people"></i></span>
+              </div>
+              <div class="counter-num">
+                <p class="counter">550</p>
+                <span class="counter-text">TOTAL CLIENTS</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-3 col-lg-3">
+            <div class="counter-box pt-4 pt-md-0">
+              <div class="counter-ico">
+                <span class="ico-circle"><i class="ion-ribbon-a"></i></span>
+              </div>
+              <div class="counter-num">
+                <p class="counter">36</p>
+                <span class="counter-text">AWARD WON</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- End Counter Section -->
 
-//Here is where the stream is fetched
-try {
-	navigator.mediaDevices.getUserMedia({
-		video: true,
-		audio: false
-	}).then(startStream).catch(deniedStream);
-	} catch (e) {
-		try {
-			navigator.mediaDevices.getUserMedia('video', startStream, deniedStream);
-		} catch (e) {
-			errorStream(e);
-		}
-	}
-video.loop = video.muted = true;
-video.autoplay = true;
-video.load();
 
+    <!-- ======= Contact Section ======= -->
+    <section class="paralax-mf footer-paralax bg-image route" style="background-image: url(assets/img/overlay-bg.jpg)">
+      <div class="overlay-mf"></div>
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="contact-mf">
+              <div id="contact" class="box-shadow-full">
+                <div class="row">                 
+                  <div class="col-md-6">
+                    <div class="title-box-2 pt-4 pt-md-0">
+                      <h5 class="title-left">
+                        Get in Touch
+                      </h5>
+                    </div>
+                    <div class="more-info">
+                      <p class="lead">
+                        Hi, I’m Hieu Tran! Feel free to contact me! 
+                      </p>
+                      <ul class="list-ico">
+                        <li><span class="ion-ios-location"></span> Sai Gon</li>
+                        <li><span class="ion-ios-telephone"></span> (+84) 93-863-0043</li>
+                        <li><span class="ion-email"></span> hieutns96@gmail.com</li>
+                      </ul>
+                    </div>
+                    <div class="socials">
+                      <ul>
+                        <li><a href=""><span class="ico-circle"><i class="ion-social-facebook"></i></span></a></li>
+                        <li><a href=""><span class="ico-circle"><i class="ion-social-instagram"></i></span></a></li>
+                        <li><a href=""><span class="ico-circle"><i class="ion-social-twitter"></i></span></a></li>
+                        <li><a href=""><span class="ico-circle"><i class="ion-social-pinterest"></i></span></a></li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- End Contact Section -->
 
-</script>
+  </main><!-- End #main -->
 
-<script src="../../lib/visageSDK.js"></script>
+  <!-- ======= Footer ======= -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+          <div class="copyright-box">
+            <p class="copyright">&copy; Copyright <strong>Hieu Tran</strong>. All Rights Reserved</p>          
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer><!-- End  Footer -->
 
-<script>
-var Module = VisageModule({onRuntimeInitialized: onModuleInitialized})
-</script>
+  <a href="#" class="back-to-top"><em class="fa fa-chevron-up"></em></a>
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="assets/vendor/jquery/jquery.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/vendor/jquery.easing/jquery.easing.min.js"></script>
+  <script src="assets/vendor/php-email-form/validate.js"></script>
+  <script src="assets/vendor/waypoints/jquery.waypoints.min.js"></script>
+  <script src="assets/vendor/counterup/jquery.counterup.min.js"></script>
+  <script src="assets/vendor/owl.carousel/owl.carousel.min.js"></script>
+  <script src="assets/vendor/typed.js/typed.min.js"></script>
+  <script src="assets/vendor/venobox/venobox.min.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
 
 </body>
-</html> 
+
+</html>
